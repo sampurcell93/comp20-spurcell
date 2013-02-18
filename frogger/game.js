@@ -6,8 +6,8 @@ var board = {
 		var ctx = canvas.getContext('2d');
 		this.canvas = canvas;
 		this.ctx = ctx;
-		this.frogStart = 188;
-		this.frogEnd= 530;
+		this.frogX = 188;
+		this.frogY= 530;
 		this.lives = 3;
 		var sprite = new Image();
   		sprite.src = 'assets/frogger_sprites.png';
@@ -17,7 +17,7 @@ var board = {
   			//draw logo and landing zone
     		ctx.drawImage(sprite,0,0,399,118,0,0,399,118);
     		//draw frog
-    		ctx.drawImage(sprite,13,364,25,25,that.frogStart, that.frogEnd, 25,25);
+    		ctx.drawImage(sprite,13,364,25,25,that.frogX, that.frogY, 25,25);
     		//draw log
     		ctx.drawImage(sprite,0,165,185,25,200,200,185,25);
 	  		//bank
@@ -44,9 +44,6 @@ var board = {
   		ctx.font = "bold 14px Calibri";
   		ctx.fillText("Score: 0", 0, 560);
   		ctx.fillText("HighScore: 0 ",100, 560);
-
-
-
 	},
 	clear: function() { 
 
@@ -59,6 +56,7 @@ var board = {
     		this.ctx.drawImage(this.sprite,13,364,25,25,toX, toY, 25,25);
 
 	}
+
 };
 
 
