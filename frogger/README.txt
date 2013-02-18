@@ -1,0 +1,1 @@
+This assignment took me about twenty minutes to complete. Admittedly, it's very static, but I feel that the modularity of my object's design will make any extension of the program simple. I correctly adhered to assignment spec and drew the required elements. 
