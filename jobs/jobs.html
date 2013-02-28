@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Friends of Ming Chow Jobs Listing</title>
+<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+<link rel='stylesheet' href='jobs.css' media='screen' type='text/css' />
+<script>
+
+    var httpRequest;
+    var str;
+   
+    function makeRequest(url) {
+      if (window.XMLHttpRequest) { // Mozilla, Safari, ...
+        httpRequest = new XMLHttpRequest();
+      } else if (window.ActiveXObject) { // IE
+        try {
+          httpRequest = new ActiveXObject("Msxml2.XMLHTTP");
+        } 
+        catch (e) {
+          try {
+            httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+          } 
+          catch (e) {}
+        }
+      }
+   
+      if (!httpRequest) {
+        alert('Giving up : Cannot create an XMLHTTP instance');
+        return false;
+      }
+      httpRequest.onreadystatechange = alertContents;
+      httpRequest.open('GET', url);
+      httpRequest.send();
+    }
+   
+    function alertContents() {
+      if (httpRequest.readyState === 4) {
+        if (httpRequest.status === 200) {
+          console.log("done");
+         parse(httpRequest.responseText);
+        } else {
+          alert('There was a problem with the request.');
+        }
+      }
+    }
+
+	function parse(str) {
+      console.log(str);
+			var json = eval("(" + str + ")");
+			var jobs = json.length;
+			for (var i = 0; i < jobs; i++)
+				addJob(json[i]);
+    }
+
+    function addJob(job) {
+        var list = document.getElementById("list");
+        var item = document.createElement("li");
+        var attr, format, tag;
+
+        for (var el in job){
+        	tag = checkProperty(el);
+          if (tag)
+        	  attr = document.createElement(tag);
+          else
+            continue;
+
+        	format = document.createTextNode(capitaliseFirstLetter(el) + ": " + job[el]);
+        	
+ 			    attr.appendChild(format);
+       		item.appendChild(attr);
+        }
+        
+        list.appendChild(item, list.childNodes[0]);
+    }
+
+    function checkProperty(property){
+
+    	switch(property){
+
+    		case "company":
+    		return "h2";
+    		break;
+        case "position":
+        return "p";
+        break;
+    		break;
+    		case "location":
+    		return "strong";
+    		break;
+    	}
+    	return null;
+
+    }
+
+    function capitaliseFirstLetter(string) {
+    	return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+
+</script>
+</head>
+
+<body onload='makeRequest("http://messagehub.herokuapp.com/lab8.json");'>
+<ul id="list"></ul>
+</body>
+
+</html>
