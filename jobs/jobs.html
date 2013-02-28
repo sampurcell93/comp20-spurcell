@@ -38,8 +38,7 @@
     function alertContents() {
       if (httpRequest.readyState === 4) {
         if (httpRequest.status === 200) {
-          console.log("done");
-         parse(httpRequest.responseText);
+           parse(httpRequest.responseText);
         } else {
           alert('There was a problem with the request.');
         }
@@ -47,7 +46,6 @@
     }
 
 	function parse(str) {
-      console.log(str);
 			var json = eval("(" + str + ")");
 			var jobs = json.length;
 			for (var i = 0; i < jobs; i++)
