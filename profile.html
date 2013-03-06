@@ -21,6 +21,9 @@
 			var object = document.createElement("p");
 			var text = document.createTextNode(update);
 
+			var i = 5;
+			var j = 10;
+			i += j;
 			object.appendChild(text);
 			var updates = document.getElementById("status");
 			updates.insertBefore(object, updates.childNodes[0]);
