@@ -5,105 +5,112 @@ $(document).ready(function() {
 		frogsSaved: 0,
 		lives: 3,
 		level: 1,
+		fps: 30,
+		time: 70000,
 		score: 0,
-		speed: 5,
+		freq: 2,
+		speed: 1,
 		ten_thou: 0,
 		slots: [
-			{lo: 8, hi: 44, filled: 1},
-			{lo: 95, hi: 129, filled: 1},
-			{lo: 182, hi: 215, filled: 1},
-			{lo: 263, hi: 301, filled: 1},
-			{lo: 351, hi: 385, filled: false}
+			{lo: 8, hi: 45, filled: 0},
+			{lo: 95, hi: 130, filled: 0},
+			{lo: 180, hi: 215, filled: 0},
+			{lo: 263, hi: 301, filled: 0},
+			{lo: 346, hi: 385, filled: 0}
 		],
 		deadFrog: 'assets/dead_frog.png',
 		cars:[
 			{
 				x: 40,
 				y: 260,
-				pos: 0,
-				width: 30,
+				width: 35,
 				alley: 465
 			},
 			{
 				x:40,
 				y: 295,
-				pos: 50,
-				width: 30,
+				width: 35,
 				alley: 435
 			},
 			{
 				x: 101,
 				y: 289,
-				pos: 50,
 				width: 55,
 				alley: 405
 			},
 			{
 				x: 40,
 				y: 260,
-				pos: 0,
-				width: 30,
+				width: 35,
 				alley: 375
 			},
 			{
 				x:40,
 				y: 295,
-				pos: 50,
 				width: 30,
 				alley: 345
 			},
 			{
 				x: 101,
 				y: 289,
-				pos: 50,
 				width: 55,
 				alley: 315
-			}
+			},
+			{
+				x:40,
+				y: 295,
+				width: 30,
+				alley: 345
+			},
 		],
-		logs: [{
+		logs: [
+		{
+			x: 126,
+			y: 192,
+			width: 125,
+			alley: 105
+		},
+		{
 			x: 185,
 			y: 165,
-			pos: 10,
 			width: 185,
-			alley: 195
+			alley: 135
 		},
 		{
 			x: 126,
 			y: 192,
-			pos: 140,
 			width: 125,
 			alley: 165
 		},
 		{
 			x: 185,
 			y: 165,
-			pos: 50,
 			width: 185,
+			alley: 195
+		},
+		{
+			x: 126,
+			y: 192,
+			width: 125,
 			alley: 225
 		},
 		{
 			x: 126,
 			y: 192,
-			pos: 220,
 			width: 125,
 			alley: 255
-		},
-		{
-			x: 126,
-			y: 192,
-			pos: 220,
-			width: 125,
-			alley: 135
-		},
-		{
-			x: 126,
-			y: 192,
-			pos: 100,
-			width: 125,
-			alley: 105
-		}],
+		}
+		],
+		fly: {speed: 1, time: 200, inc: 7, gotten: false},
 		init: function() {
-
+			this.slots[1].filled = 1;
+			this.slots[4].filled = 1;
+			this.slots[2].filled = 1;
+			this.slots[3].filled = 1;
+			this.fly.count = 0;
+			this.fly.prob = 0;
+			this.fly.xPos = 0;
+			this.fly.yPos = 0;
 			this.frog = {
 				x: 185,
 				y: 495,
@@ -112,6 +119,16 @@ $(document).ready(function() {
 					y: 367
 				}
 			}
+
+			for (var i in this.logs){
+				this.logs[i].offset =  Math.ceil(Math.random() * 2);
+				this.logs[i].pos = Math.ceil(Math.random() * 300);
+			}
+			for (var j in this.cars) {
+				this.cars[j].pos = Math.ceil(Math.random() * 300);
+				this.cars[j].offset =  Math.ceil(Math.random() * 4);
+			}
+
 			var canvas = document.getElementById('game');
 			var ctx = canvas.getContext('2d');
 			this.canvas = canvas;
@@ -146,17 +163,21 @@ $(document).ready(function() {
 	  		ctx.font = "bold 14px Calibri";
 	  		ctx.fillText("Score: " + this.score, 0, 560);
 	  		ctx.fillText("HighScore: 0 ",100, 560);
+	  		ctx.fillText("Time remaining: " + Math.ceil(this.time / 1000),200, 560);
 	  		return this;
 		},
 		draw: function() {
+			if (this.time <= 0) {
+				this.die();
+			}
 			this.drawBg();
+			this.time -= this.fps;
 			this.moveObjects();
 			this.checkColissions();
 			var ctx = this.ctx;
 			var sprite = this.sprite;
 			for (var i in this.logs)
     			ctx.drawImage(sprite, 0, this.logs[i].y, this.logs[i].width, 30, this.logs[i].pos, this.logs[i].alley, this.logs[i].width, 30 );
-   
 	  		//bank
 	  		ctx.drawImage(sprite, 0, 110, 399, 45, 0, 270, 399, 45);
 	  		//bank
@@ -166,7 +187,7 @@ $(document).ready(function() {
 	
     		for (var i in this.cars){
 				var car = this.cars[i];
-    			ctx.drawImage(sprite, car.x, car.y, car.width, 30, car.pos, car.alley, car.width, 21 );
+    			ctx.drawImage(sprite, car.x, car.y, car.width, 30, car.pos, car.alley, car.width, 30 );
     		}
     		for (var j = 0; j < this.lives; j++)
 	  			ctx.drawImage(sprite, 10, 335, 30, 30, 30*j, 525, 30, 30);
@@ -178,8 +199,10 @@ $(document).ready(function() {
 	  				total++;
 	  			}
 	  		}
+	  		this.drawFly();
 	  		if (total == 5)
 	  			this.levelUp();
+
 	  		//fix this
 	  		if (this.lives < 4 && this.score >= 10000)
 	  			this.lives++;
@@ -187,27 +210,28 @@ $(document).ready(function() {
 
 		},
 		moveObjects: function() {
+			var spd = this.speed;
 			for (var i in this.logs){
-				if (i % 2)
-					this.logs[i].pos += this.speed;
+				var log = this.logs[i];
+				if (i % this.freq)
+					log.pos += spd + log.offset;
 				else 
-					this.logs[i].pos -= this.speed;
+					log.pos -= spd + log.offset;
 
-				if (this.logs[i].pos >= this.canvas.width + this.logs[i].width)
-					this.logs[i].pos = -this.logs[i].width;
-				else if (this.logs[i].pos < -this.logs[i].width)
-					this.logs[i].pos = this.canvas.width;
+				if (log.pos >= this.canvas.width + log.width)
+					log.pos = -log.width;
+				else if (log.pos < -log.width)
+					log.pos = this.canvas.width;
 			}	
 			for (var i in this.cars){
-				var spd = this.speed;
 				var car = this.cars[i];
-				if (i % 2)
-					car.pos += spd;
+				if (i % this.freq)
+					car.pos += spd + car.offset;
 				else 
-					car.pos -= spd;
-				if (car.pos >= this.canvas.width + 30)
-			  		car.pos = -20;
-				else if(car.pos < -40)
+					car.pos -= spd + car.offset;
+				if (car.pos >= this.canvas.width + car.width)
+			  		car.pos = -car.width;
+				else if(car.pos < -car.width)
 					car.pos = this.canvas.width;
 			}
 	  		return this;
@@ -258,16 +282,16 @@ $(document).ready(function() {
 		checkBounds: function(x,y) {
 			var w = this.canvas.width;
 			var h = this.canvas.height;
-			return (x > w - 25 || x < 0 || y > h - 60|| y < 50) ? false : true;
+			return (x > w || x < -10 || y > h - 60|| y < 50) ? false : true;
 		},
 		checkColissions: function() {
 			if (this.checkWin())
 				return false;
-
-			if (this.frog.y > 270){
+			var frog = this.frog;
+			if (frog.y > 270){
 				for (var i in this.cars){
 					var car = this.cars[i];
-					if (this.frog.x >= car.pos && this.frog.x <= car.pos+car.width && this.frog.y == car.alley)
+					if (frog.x >= car.pos && frog.x <= car.pos+car.width && frog.y == car.alley)
 						this.die();
 				}
 			}
@@ -275,23 +299,31 @@ $(document).ready(function() {
 				var flag = false;
 				for (var i in this.logs){
 					var log = this.logs[i];
-					if (this.frog.x > log.pos && this.frog.x < log.pos+log.width && this.frog.y == log.alley){
+					if ((frog.x > log.pos || frog.x + 6 > log.pos) && frog.x < log.pos+log.width && frog.y == log.alley){
 						flag = true
-						if ( i % 2)
-							this.frog.x+=5;
+						if ( i % this.freq)
+							frog.x += this.speed + log.offset;
 						else 
-							this.frog.x-=5;
+							frog.x -= this.speed + log.offset;
 					}
 				}
 				if (!flag) this.die();
-
-	  		return this;
 			}
+				
+			if ((frog.x >= this.fly.xPos || frog.x + 6 > this.fly.xPos) && frog.x <= this.fly.xPos+30 && frog.y == this.fly.yPos){
+				this.score += 200;
+				this.fly.gotten = true;
+				this.fly.xPos = 0;
+				this.fly.yPos = 0;
+				this.fly.count = this.fly.time + 1;
+			}
+			return this;
 		},
 		die: function() {
 			window.clearInterval(drawLoop);
 			this.clear();
 			var that = this;
+			this.time = 50000 - (this.level - 1 * 20);
 			var dead = new Image();
 			dead.src = this.deadFrog;
 			dead.onload = function() {
@@ -300,19 +332,20 @@ $(document).ready(function() {
 			setTimeout(function() {
 				that.lives--;
 				if (!that.lives){
+					$("body").append("<div class='ui-dialog' onclick='document.location.reload(true)'>GAME OVER. Play again!<br />Score: " + that.score + "</div>");
 					$("canvas").fadeOut();
-					$("body").append("<h1>You have lost. LOST.</h1>");
 				}
 				that.clear().init();
 				drawLoop = window.setInterval(function() {
 					that.draw();
-				}, 60);
+				}, board.fps);
 			}, 2000);
 		},
 		checkWin: function() {
 			var x = this.frog.x;
 			var y = this.frog.y;
 			if (y == 75){
+				console.log(x,y);
 				for (var i in this.slots){
 					if (x <= this.slots[i].hi && x >= this.slots[i].lo && !this.slots[i].filled){
 						this.slots[i].filled = true;
@@ -325,17 +358,65 @@ $(document).ready(function() {
 			}
 		},
 		levelUp: function() {
-			for (var i in this.slots)
-				this.slots[i].filled = false;
 			this.level++;
+			if (this.level > 10)
+				this.fps -=2;
+			if (this.level > 5)
+				this.freq++;
 			this.speed++;
 			this.score += 1000;
+			this.fly.speed++;
+			this.fly.length -= 6;
+			this.fly.gotten = false;
+			this.time = 70000 - ((this.level - 1) * 1000);
+			if (!(this.level % 4)) this.fly.inc--;
+			for (var i in this.slots)
+				this.slots[i].filled = false;
+			window.clearInterval(drawLoop);
+			$("body").append("<div class='ui-dialog'>Level " + this.level + "</div>");
+			$(".ui-dialog").delay(700).fadeOut(300, function() {
+				$(this).remove();
+			})
+			setTimeout(function() {
+				board.init();
+				drawLoop = window.setInterval(function() {
+					board.draw();
+				}, board.fps);
+			}, 1000);
+		},
+		drawFly: function() {
+			var fly = this.fly;
+			var alleys = [495,465,435,405,375,345,315,285,255,225,195,165,135];
+			if (fly.gotten)
+				return this;
+			if (!fly.count){
+   				fly.prob = Math.ceil(Math.random() * 1200);
+   				fly.xPos = Math.ceil(Math.random() * 399);
+   				fly.yPos = alleys[Math.ceil(Math.random() * 299 + 100) % 15];
+   			}
+   			else if (fly.count > fly.time){
+   				fly.count = 0;
+   				fly.prob = 0;
+   				fly.xPos = 0;
+   				fly.yPos = 0;
+   			}
+   			if (fly.prob > 0 && fly.prob < fly.inc){
+   				//draw fly
+   				if (this.time % 2)
+   					fly.xPos -= fly.speed;
+   				else fly.xPos += fly.speed; 
+	  			this.ctx.drawImage(this.sprite, 137, 231, 20, 20, fly.xPos, fly.yPos, 20, 20);
+	  			fly.count++;
+	  		}
+	  		return this;
 		}
 	};
 
 	drawLoop = window.setInterval(function() {
 		board.draw();
-	}, 60);
+	}, board.fps);
+
+	board.init();
 
 }).on("keydown", function(e) {
 	if (e.keyCode == 37)
