@@ -3,7 +3,7 @@ $(document).ready(function() {
 	board = {
 		maxDepth: 0,
 		frogsSaved: 0,
-		lives: 3,
+		lives: 5,
 		level: 1,
 		fps: 30,
 		time: 70000,
@@ -103,10 +103,6 @@ $(document).ready(function() {
 		],
 		fly: {speed: 1, time: 200, inc: 7, gotten: false},
 		init: function() {
-			this.slots[1].filled = 1;
-			this.slots[4].filled = 1;
-			this.slots[2].filled = 1;
-			this.slots[3].filled = 1;
 			this.fly.count = 0;
 			this.fly.prob = 0;
 			this.fly.xPos = 0;
@@ -320,6 +316,7 @@ $(document).ready(function() {
 			return this;
 		},
 		die: function() {
+			console.log(this.cars);
 			window.clearInterval(drawLoop);
 			this.clear();
 			var that = this;
@@ -345,7 +342,6 @@ $(document).ready(function() {
 			var x = this.frog.x;
 			var y = this.frog.y;
 			if (y == 75){
-				console.log(x,y);
 				for (var i in this.slots){
 					if (x <= this.slots[i].hi && x >= this.slots[i].lo && !this.slots[i].filled){
 						this.slots[i].filled = true;
@@ -369,7 +365,16 @@ $(document).ready(function() {
 			this.fly.length -= 6;
 			this.fly.gotten = false;
 			this.time = 70000 - ((this.level - 1) * 1000);
-			if (!(this.level % 4)) this.fly.inc--;
+			if (!(this.level % 4)){
+				this.fly.inc--;
+				this.cars.push({
+					x: 40,
+					y: 260,
+					width: 35,
+					alley: board.pickAlley("road","evens"),
+					pos: 40
+				});
+			}
 			for (var i in this.slots)
 				this.slots[i].filled = false;
 			window.clearInterval(drawLoop);
@@ -384,15 +389,30 @@ $(document).ready(function() {
 				}, board.fps);
 			}, 1000);
 		},
+		pickAlley: function(range, even) {
+			var alleys = [495,465,435,405,375,345,315,285,255,225,195,165,135];
+			if (range == 'water')
+				alleys = [315,285,255,225,195,165,135];
+			else if (range == 'road')
+				alleys = [495,465,435,405,375,345];
+			
+			if (even == "evens"){
+				var num = Math.ceil(Math.random() * 299 + 100) % 12;
+				while (num % 2)
+					num = Math.ceil(Math.random() * 299 + 100) % 12;
+				return alleys[num];
+			}
+			 
+			return alleys[Math.ceil(Math.random() * 299 + 100) % 12];
+		},
 		drawFly: function() {
 			var fly = this.fly;
-			var alleys = [495,465,435,405,375,345,315,285,255,225,195,165,135];
 			if (fly.gotten)
 				return this;
 			if (!fly.count){
    				fly.prob = Math.ceil(Math.random() * 1200);
    				fly.xPos = Math.ceil(Math.random() * 399);
-   				fly.yPos = alleys[Math.ceil(Math.random() * 299 + 100) % 15];
+   				fly.yPos = this.pickAlley(null); 
    			}
    			else if (fly.count > fly.time){
    				fly.count = 0;
